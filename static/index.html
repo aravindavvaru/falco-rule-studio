@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Falco Rule Studio — AI-Powered Rule Generator</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo-group">
+        <svg class="falco-icon" viewBox="0 0 40 40" fill="none">
+          <circle cx="20" cy="20" r="20" fill="#00aec7"/>
+          <path d="M12 28 L20 10 L28 28 L20 22 Z" fill="white" opacity="0.9"/>
+          <path d="M20 10 L28 28" stroke="white" stroke-width="1.5" opacity="0.4"/>
+        </svg>
+        <div>
+          <span class="logo-title">Falco Rule Studio</span>
+          <span class="logo-badge">AI-Powered</span>
+        </div>
+      </div>
+      <nav class="nav-tabs">
+        <button class="nav-tab active" data-tab="generate">Generate</button>
+        <button class="nav-tab" data-tab="explain">Explain</button>
+        <button class="nav-tab" data-tab="validate">Validate</button>
+        <button class="nav-tab" data-tab="optimize">Optimize</button>
+        <button class="nav-tab" data-tab="chat">AI Chat</button>
+      </nav>
+      <div class="cncf-badge">
+        <span class="cncf-dot"></span>
+        CNCF Graduated · Falco
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-inner">
+      <h1>The Missing Feature in <span class="highlight">Falco</span>'s Ecosystem</h1>
+      <p>Write Falco security rules in plain English. Understand existing rules instantly. Catch bugs before production. No rule syntax expertise required.</p>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <main class="main">
+
+    <!-- ── GENERATE TAB ── -->
+    <div class="tab-content active" id="tab-generate">
+      <div class="panel-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Describe Your Security Requirement</h2>
+            <p>Write what you want to detect in plain English — the AI generates production-ready Falco YAML.</p>
+          </div>
+
+          <div class="form-group">
+            <label>Security Requirement <span class="required">*</span></label>
+            <textarea id="gen-description" rows="4"
+              placeholder="e.g. Alert me when any process inside a container tries to access /etc/shadow or /etc/passwd..."></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group half">
+              <label>Deployment Context</label>
+              <select id="gen-context">
+                <option value="Kubernetes environment">Kubernetes</option>
+                <option value="bare metal Linux host">Bare Metal Linux</option>
+                <option value="Docker standalone environment">Docker Standalone</option>
+                <option value="cloud VM environment">Cloud VM</option>
+              </select>
+            </div>
+            <div class="form-group half">
+              <label>Severity</label>
+              <select id="gen-severity">
+                <option value="EMERGENCY">EMERGENCY</option>
+                <option value="ALERT">ALERT</option>
+                <option value="CRITICAL">CRITICAL</option>
+                <option value="ERROR">ERROR</option>
+                <option value="WARNING" selected>WARNING</option>
+                <option value="NOTICE">NOTICE</option>
+                <option value="INFORMATIONAL">INFORMATIONAL</option>
+                <option value="DEBUG">DEBUG</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Example Prompts</label>
+            <div class="chip-list" id="example-prompts"></div>
+          </div>
+
+          <button class="btn-primary" id="btn-generate">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a1 1 0 011 1v6h6a1 1 0 010 2h-6v6a1 1 0 01-2 0v-6H3a1 1 0 010-2h6V3a1 1 0 011-1z"/></svg>
+            Generate Falco Rule
+          </button>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header flex-between">
+            <div>
+              <h2>Generated Rule</h2>
+              <p>Copy this directly into your Falco rules file.</p>
+            </div>
+            <div class="action-buttons" id="gen-actions" style="display:none">
+              <button class="btn-icon" id="btn-copy-gen" title="Copy YAML">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M8 2a2 2 0 00-2 2H5a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V6a2 2 0 00-2-2h-1a2 2 0 00-2-2H8zm0 2h2a2 2 0 012 2h1v10H5V6h1a2 2 0 012-2z"/></svg>
+              </button>
+              <button class="btn-secondary-sm" id="btn-explain-generated">Explain</button>
+              <button class="btn-secondary-sm" id="btn-validate-generated">Validate</button>
+            </div>
+          </div>
+          <div class="code-output" id="gen-output">
+            <div class="empty-state">
+              <svg viewBox="0 0 60 60" fill="none">
+                <circle cx="30" cy="30" r="28" stroke="#00aec7" stroke-width="2" stroke-dasharray="6 4"/>
+                <path d="M22 30h16M30 22v16" stroke="#00aec7" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <p>Your generated Falco rule will appear here</p>
+            </div>
+          </div>
+          <div class="loader" id="gen-loader" style="display:none">
+            <div class="spinner"></div>
+            <span>Generating your Falco rule...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Example Rules -->
+      <div class="section-title">Example Rules — Click to Load</div>
+      <div class="example-cards" id="example-cards"></div>
+    </div>
+
+    <!-- ── EXPLAIN TAB ── -->
+    <div class="tab-content" id="tab-explain">
+      <div class="panel-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Paste a Falco Rule</h2>
+            <p>Understand exactly what any Falco rule detects — in plain English.</p>
+          </div>
+          <div class="form-group">
+            <label>Falco Rule YAML</label>
+            <textarea id="explain-input" rows="16" class="code-textarea"
+              placeholder="- rule: Example Rule&#10;  desc: ...&#10;  condition: ...&#10;  output: ...&#10;  priority: WARNING"></textarea>
+          </div>
+          <button class="btn-primary" id="btn-explain">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 110-12 6 6 0 010 12zm-1-9a1 1 0 112 0v4a1 1 0 11-2 0V7zm1-3a1 1 0 100 2 1 1 0 000-2z"/></svg>
+            Explain This Rule
+          </button>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Plain English Explanation</h2>
+            <p>No security expertise required to understand this.</p>
+          </div>
+          <div class="markdown-output" id="explain-output">
+            <div class="empty-state">
+              <svg viewBox="0 0 60 60" fill="none">
+                <rect x="10" y="12" width="40" height="6" rx="3" fill="#00aec7" opacity="0.3"/>
+                <rect x="10" y="24" width="30" height="6" rx="3" fill="#00aec7" opacity="0.2"/>
+                <rect x="10" y="36" width="35" height="6" rx="3" fill="#00aec7" opacity="0.15"/>
+              </svg>
+              <p>Paste a rule on the left and click Explain</p>
+            </div>
+          </div>
+          <div class="loader" id="explain-loader" style="display:none">
+            <div class="spinner"></div>
+            <span>Analyzing your rule...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── VALIDATE TAB ── -->
+    <div class="tab-content" id="tab-validate">
+      <div class="panel-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Rule Validator</h2>
+            <p>Catch YAML errors, missing fields, invalid priorities, and best practice violations before deploying.</p>
+          </div>
+          <div class="form-group">
+            <label>Falco Rule YAML</label>
+            <textarea id="validate-input" rows="16" class="code-textarea"
+              placeholder="Paste your Falco rule YAML here..."></textarea>
+          </div>
+          <button class="btn-primary" id="btn-validate">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"/></svg>
+            Validate Rule
+          </button>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Validation Results</h2>
+          </div>
+          <div id="validate-output">
+            <div class="empty-state">
+              <svg viewBox="0 0 60 60" fill="none">
+                <circle cx="30" cy="30" r="20" stroke="#00aec7" stroke-width="2"/>
+                <path d="M22 30l6 6 10-12" stroke="#00aec7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <p>Validation results will appear here</p>
+            </div>
+          </div>
+          <div class="loader" id="validate-loader" style="display:none">
+            <div class="spinner"></div>
+            <span>Validating your rule...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── OPTIMIZE TAB ── -->
+    <div class="tab-content" id="tab-optimize">
+      <div class="panel-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Rule Optimizer</h2>
+            <p>Improve rule performance, reduce false positives, and align with community best practices.</p>
+          </div>
+          <div class="form-group">
+            <label>Falco Rule YAML</label>
+            <textarea id="optimize-input" rows="16" class="code-textarea"
+              placeholder="Paste your Falco rule here to get optimization suggestions..."></textarea>
+          </div>
+          <button class="btn-primary" id="btn-optimize">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M11.293 1.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-10 10a1 1 0 01-.707.293H2a1 1 0 01-1-1v-6.586a1 1 0 01.293-.707l10-10zM3 13.586V17h3.414l8-8L11 5.586l-8 8z"/></svg>
+            Optimize Rule
+          </button>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Optimization Report</h2>
+          </div>
+          <div class="markdown-output" id="optimize-output">
+            <div class="empty-state">
+              <svg viewBox="0 0 60 60" fill="none">
+                <path d="M10 40 Q20 20 30 30 Q40 40 50 10" stroke="#00aec7" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                <circle cx="50" cy="10" r="4" fill="#00aec7"/>
+              </svg>
+              <p>Optimization suggestions will appear here</p>
+            </div>
+          </div>
+          <div class="loader" id="optimize-loader" style="display:none">
+            <div class="spinner"></div>
+            <span>Analyzing for optimizations...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CHAT TAB ── -->
+    <div class="tab-content" id="tab-chat">
+      <div class="chat-container">
+        <div class="chat-header">
+          <div class="chat-avatar">
+            <svg viewBox="0 0 40 40" fill="none">
+              <circle cx="20" cy="20" r="20" fill="#00aec7"/>
+              <path d="M12 28 L20 10 L28 28 L20 22 Z" fill="white" opacity="0.9"/>
+            </svg>
+          </div>
+          <div>
+            <strong>Falco AI Expert</strong>
+            <p>Ask anything about Falco rules, syscalls, security detection, or MITRE ATT&CK techniques.</p>
+          </div>
+        </div>
+
+        <div class="chat-messages" id="chat-messages">
+          <div class="chat-message assistant">
+            <div class="chat-bubble">
+              Hello! I'm your Falco security expert. I can help you:
+              <ul>
+                <li>Write and debug Falco rules</li>
+                <li>Understand syscall-based detection</li>
+                <li>Map attacks to MITRE ATT&CK techniques</li>
+                <li>Tune rules to reduce false positives</li>
+                <li>Understand Falco's internals and eBPF probe</li>
+              </ul>
+              What would you like to know?
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-input-area">
+          <div class="chat-suggestions">
+            <button class="chip" onclick="insertChatMsg('How does Falco detect cryptomining?')">How does Falco detect cryptomining?</button>
+            <button class="chip" onclick="insertChatMsg('What is the difference between a macro and a list in Falco?')">Macros vs Lists?</button>
+            <button class="chip" onclick="insertChatMsg('How do I tune a rule to reduce false positives?')">Reduce false positives?</button>
+            <button class="chip" onclick="insertChatMsg('Explain the spawned_process macro')">What is spawned_process?</button>
+          </div>
+          <div class="chat-input-row">
+            <textarea id="chat-input" rows="2" placeholder="Ask anything about Falco..."></textarea>
+            <button class="btn-send" id="btn-chat-send">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
